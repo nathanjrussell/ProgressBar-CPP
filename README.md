@@ -83,15 +83,53 @@ cmake -S . -B build -DPROGRESSBAR_BUILD_EXAMPLES=OFF
 
 ## Basic usage
 ```cpp
+#include <chrono>
+#include <cstdint>
+#include <thread>
+
 #include <progressbar/progress_bars.hpp>
 
-progressbar::ProgressBars pbs;
-int id = pbs.createProgressBar(100, "Work", progressbar::ProgressBars::Color::Green);
+int main() {
+  using namespace std::chrono_literals;
+  progressbar::ProgressBars::Options options;
+  options.enabled = true;
+  options.minRedrawInterval = std::chrono::milliseconds(40);
+  options.barWidth = 28;
+  options.removeCompletedAfter = std::chrono::milliseconds(2000);
+  // Demonstrates optional logging of completed task durations.
+  progressbar::ProgressBars pbs(options, std::string{"progressbar-example.log"});
 
-pbs.updateProgressBar(id, 10); // absolute
-pbs.updateProgressBar(id);     // increment by 1
-pbs.markProgressBarComplete(id);
+  const std::uint64_t total = 100;
+  const int a = pbs.createProgressBar(total, "Download", progressbar::ProgressBars::Color::Cyan);
+  const int b = pbs.createProgressBar(total, "Extract", progressbar::ProgressBars::Color::Yellow);
+
+  // Create using a stable string key. Returns the underlying int id.
+  const int c = pbs.createProgressBar("install", total, "Install", progressbar::ProgressBars::Color::Green);
+
+  for (std::uint64_t i = 0; i <= total; ++i) {
+    pbs.updateProgressBar(a, i);
+    if (i % 2 == 0) pbs.updateProgressBar(b);
+    // Update using the string id.
+    if (i % 3 == 0) pbs.updateProgressBar("install");
+    std::this_thread::sleep_for(20ms);
+  }
+// Complete using a mix of int and string ids.
+  pbs.markProgressBarComplete(a);
+
+  std::this_thread::sleep_for(3000ms);
+
+  pbs.markProgressBarComplete(b);
+
+  // Let the completed bars auto-remove.
+  std::this_thread::sleep_for(7500ms);
+  pbs.markProgressBarComplete("install");
+  return 0;
+}
 ```
+The above will creat the following output in the terminal:
+
+![Example output](screenshot.png)
+
 
 ## Notes on terminal support
 Single-line `\r` can only rewrite one line. To support multiple live progress bars without filling the terminal,
