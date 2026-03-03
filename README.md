@@ -14,21 +14,42 @@ Allows for progress bars to be implemented in code.
 - C++17
 - CMake 3.20+
 
-## Add to your project (FetchContent)
-In your project’s `CMakeLists.txt`:
+Make it a *single* Markdown callout box, and put the code blocks fully inside it by prefixing every line with `>`.
 
-```cmake
+
+### CMake integration `PROGRESSBAR_ENABLED` 
+ #### 1\) Add the dependency
+ ```cmake
 include(FetchContent)
 
 FetchContent_Declare(
-  ProgressBar
-  GIT_REPOSITORY https://github.com/nathanjrussell/ProgressBar-CPP.git
-  GIT_TAG main
+ProgressBar
+GIT_REPOSITORY https://github.com/nathanjrussell/ProgressBar-CPP.git
+GIT_TAG v1.2.0
 )
+ 
+# Recommended when fetching: do not build examples
+set(PROGRESSBAR_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+ 
 FetchContent_MakeAvailable(ProgressBar)
-
-target_link_libraries(your_target PRIVATE ProgressBar::progressbar)
+ 
+target_link_libraries(your_target PUBLIC ProgressBar::progressbar)
 ```
+
+#### 2\) Control `PROGRESSBAR_ENABLED` (define it once per translation unit)
+`PROGRESSBAR_ENABLED` is a header-controlled compile-time macro. To avoid `macro redefined` warnings, define it in exactly one place for any translation unit that includes ProgressBar headers.
+
+ Consumers should define the macro on their own targets:
+```cmake
+ option(ENABLE_PROGRESSBAR "Enable progress bar output" OFF)
+ 
+ target_compile_definitions(your_target PUBLIC
+   PROGRESSBAR_ENABLED=$<IF:$<BOOL:${ENABLE_PROGRESSBAR}>,1,0>
+ )
+ ```
+
+Do \*not\* also add `PROGRESSBAR_ENABLED` to `ProgressBar::progressbar` from your project, or you may inject conflicting `-DPROGRESSBAR_ENABLED=...` defines into the same translation unit.
+
 
 Then in your code:
 
