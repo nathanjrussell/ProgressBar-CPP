@@ -21,8 +21,11 @@ target_include_directories(progressbar
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# Don't export PROGRESSBAR_ENABLED to consumers.
+# Consumers can define it however they want without triggering macro redefinition warnings.
+# We keep a project-level default for building this library.
 target_compile_definitions(progressbar
-  PUBLIC
+  PRIVATE
     PROGRESSBAR_ENABLED=$<IF:$<BOOL:${PROGRESSBAR_ENABLED}>,1,0>
 )
 
