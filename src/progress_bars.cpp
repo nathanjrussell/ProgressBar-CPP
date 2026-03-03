@@ -56,7 +56,7 @@ struct ProgressBarsReal::Impl {
   std::vector<int> order_;
   std::unordered_map<int, Bar> barsById_;
 
-  // New: map string ids to underlying int ids.
+  // map string ids to  int ids.
   std::map<std::string, int> stringToId_;
 
   std::optional<int> lookupStringId(std::string_view sid) {
@@ -78,6 +78,7 @@ struct ProgressBarsReal::Impl {
     return PROGRESSBAR_ISATTY(PROGRESSBAR_FILENO(stderr)) != 0;
   }
 
+//terminal color codes for ANSI escape sequencies
   static const char* ansiColor(Color c) {
     switch (c) {
       case Color::Red: return "\x1b[31m";
@@ -99,6 +100,7 @@ struct ProgressBarsReal::Impl {
   static std::string formatDuration(std::chrono::milliseconds ms) {
     const auto total_ms = ms.count();
 
+    // Format as HhMmSsMMMms with no leading 0 entries (e.g. "2m15s123ms", "45s000ms", "1h00m00s000ms")
     const auto hrs = total_ms / 3600000;
     const auto mins = (total_ms % 3600000) / 60000;
     const auto secs = (total_ms % 60000) / 1000;
